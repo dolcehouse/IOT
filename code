@@ -1,0 +1,78 @@
+void main()
+{
+ setup_adc(ADC_CLOCK_INTERNAL ); // initialize ADC with a sampling rate of Crystal/4 MHz
+ setup_adc_ports(ALL_ANALOG );   // set PIN_A0 as analog input channel
+delay_ms(5);
+delay_ms(5);
+printf(&quot;ATE0&quot;); 
+putc(0x0D);
+putc(0x0A);
+delay_ms(500);
+printf(&quot;AT+CWMODE=3&quot;); 
+putc(0x0D);
+delay_ms(500);
+printf(&quot;AT+CIPMUX=0&quot;); 
+putc(0x0D);
+delay_ms(500);
+printf(&quot;AT+CIPMODE=0&quot;); 
+putc(0x0D);
+delay_ms(500);
+printf(&quot;AT+CWJAP=\&quot;project\&quot;,\&quot;12345678\&quot;&quot;); 
+putc(0x0D);
+delay_ms(5000);
+printf(&quot;AT+CIFSR&quot;); 
+putc(0x0D);
+delay_ms(500);
+printf(&quot;AT+CIPSTART=\&quot;TCP\&quot;,\&quot;api.thingspeak.com\&quot;,80&quot;); ///&quot;\&quot;api.thingspeak.com\&quot;&quot;
+putc(0x0D);
+delay_ms(5000);
+  
+while(true)
+{
+ 
+set_adc_channel(0);
+delay_ms(100);
+a= read_adc(); 
+delay_ms(100);
+a=5*(a/1023);
+delay_ms(100);
+set_adc_channel(1);
+delay_ms(100);
+b= read_adc(); 
+delay_ms(100);
+b=5*(b/1023);
+delay_ms(100);
+
+set_adc_channel(2);
+delay_ms(100);
+c= read_adc(); 
+delay_ms(100);
+c=5*(c/1023);
+
+delay_ms(100);
+setup_timer_1(t1_external | T1_DIV_BY_1);
+      set_timer1(0);   
+      delay_ms(1000);         // in protues, should be 1000/3
+      setup_timer_1(T1_DISABLED);
+      beat=get_timer1();
+      beat=beat*50;
+  
+//printf(&quot;\fbeat rate:%lu&quot;,beat);
+//printf(&quot;\fX:%f Y:%f Z:%f&quot;,a,b,c);
+//delay_ms(3000);
+if(((beat&gt;70)&amp;((a&gt;2)&amp;(b&gt;2)&amp;(c&gt;2)))||((a&gt;2)&amp;(b&gt;2)&amp;(c&gt;2))&amp;
+((input(PIN_c4)==1)&amp;(input(PIN_c5)==1))||(((input(PIN_c4)==1)&amp;(input(PIN_c5)==1))&amp; (beat&gt;70)))
+{
+output_high(pin_b0);
+}
+putc(0x0D);
+delay_ms(500);   
+printf(&quot;AT+CIPSTART=\&quot;TCP\&quot;,\&quot;api.thingspeak.com\&quot;,80&quot;); 
+putc(0x0D);
+delay_ms(3000);
+printf(&quot;AT+CIPSEND=200&quot;); 
+putc(0x0D);
+delay_ms(2000);
+printf(&quot;GET /update?api_key=6BK4YGR47P27LGA6&amp;field1=%ld&amp;field2=%f&quot;,beat ,a);
+printf(&quot;&amp;field3=%f&amp;field4=%f&quot;,b,c);
+delay_ms(15000);
